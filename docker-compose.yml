@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # LocalStack đóng vai trò là AWS giả lập trên máy local
+  localstack:
+    container_name: localstack_iam_lab
+    image: localstack/localstack:3.0.0
+    ports:
+      - "4566:4566"            # Port mặc định để gọi các dịch vụ AWS
+    environment:
+
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./localstack:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  # Container chạy Terraform
+  terraform:
+    container_name: terraform_iam_lab
+    image: hashicorp/terraform:latest
+    volumes:
+      - .:/workspace           # Ánh xạ thư mục hiện tại vào container
+    working_dir: /workspace
+    environment:
+      - AWS_ACCESS_KEY_ID=test # LocalStack chấp nhận mọi key là 'test'
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      - localstack
+    entrypoint: /bin/sh        # Giữ container chạy để chúng ta vào gõ lệnh
+    stdin_open: true
+    tty: true

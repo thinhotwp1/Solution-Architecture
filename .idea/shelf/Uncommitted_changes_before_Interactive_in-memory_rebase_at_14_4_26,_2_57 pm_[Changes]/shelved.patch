@@ -1,0 +1,11 @@
+Index: .gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>/localstack/cache/\n
+===================================================================
+diff --git a/.gitignore b/.gitignore
+--- a/.gitignore	(revision b9cc49986809a8f2b56f7add2bdc12516c476e46)
++++ b/.gitignore	(date 1776153415063)
+@@ -1,1 +1,2 @@
+ /localstack/cache/
++/.terraform/
