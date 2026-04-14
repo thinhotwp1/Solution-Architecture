@@ -1,11 +1,4 @@
-# Day 2: IAM Policies
+# Day 4 - Security Credentials & AWS CLI
 
-Execute this command:
-
-docker compose up -d
-
-docker exec -it terraform_iam_lab sh
-
-terraform init
-
-terraform apply
+Follow this guild:
+https://docs.google.com/document/d/1qa2xTe_9zFwb8wSxYjTvlZ3Yqlco0KqNXlWuW6AOOZs/edit?usp=sharing
