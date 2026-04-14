@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5c997663-f482-4b86-99a2-8528ecf475ac" name="Changes" comment="init">
-      <change beforePath="$PROJECT_DIR$/.idea/Solution-Architecture.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Solution-Architecture.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/main.tf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -15,7 +13,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="Day-1-IAM-Cơ-bản-&amp;-IAM-Users/Groups" />
+        <entry key="$PROJECT_DIR$" value="Day-2-IAM-Policies-(Chính-sách-quyền)" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -54,7 +52,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "Day-2-IAM-Policies-(Chính-sách-quyền)",
+    "git-widget-placeholder": "Day-3---Identity-and-Access-Management-(IAM)-Roles",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/thinh/github/Solution-Architecture",
     "settings.editor.selected.configurable": "vcs.Git",
@@ -103,7 +101,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="Day-1-IAM-Cơ-bản-&amp;-IAM-Users/Groups" />
+                        <option value="origin/Day-1-IAM-Cơ-bản-&amp;-IAM-Users-Groups" />
                       </list>
                     </value>
                   </entry>
