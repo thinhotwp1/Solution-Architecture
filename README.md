@@ -1,11 +1,4 @@
-# Day 2: IAM Policies
+# Day 3: IAM Roles 
 
-Execute this command:
-
-docker compose up -d
-
-docker exec -it terraform_iam_lab sh
-
-terraform init
-
-terraform apply
+Follow this guild:
+https://docs.google.com/document/d/1rjpCKjocE-x4y4YLF-oCWfVm4bADVnPg6wUp4R3kY18/edit?usp=sharing
