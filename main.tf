@@ -70,7 +70,7 @@ resource "aws_subnet" "private_subnet_1b" {
 
 # Day 8:
 # 1. Create the Internet Gateway (Tạo cổng Internet)
-resource "aws_internet_gateway" "main_igw" {
+resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main_vpc.id
 
   tags = {
@@ -78,32 +78,43 @@ resource "aws_internet_gateway" "main_igw" {
   }
 }
 
-# 2. Create a Public Route Table (Tạo bảng định tuyến công cộng)
+# Day 9: Create an Elastic IP for the NAT Gateway
+resource "aws_eip" "nat_eip" {
+  vpc = true # Note: In newer AWS provider versions, use `domain = "vpc"` instead of `vpc = true`
+
+  # Best Practice: EIP requires the Internet Gateway to exist first
+  depends_on = [aws_internet_gateway.igw]
+
+  tags = { Name = "Aviation-NAT-EIP" }
+}
+# Create the NAT Gateway in the PUBLIC subnet
+resource "aws_nat_gateway" "main_nat" {
+  allocation_id = aws_eip.nat_eip.id
+
+  # IMPORTANT: Place it in Public Subnet A, NOT the private subnet!
+  subnet_id     = aws_subnet.public_subnet_1a.id
+
+  tags = { Name = "Main-NAT-Gateway" }
+
+  depends_on = [aws_internet_gateway.igw]
+}
+
+# --- PUBLIC ROUTE TABLE (Dùng cho Load Balancer) ---
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main_vpc.id
-
   route {
-    # 0.0.0.0/0 means "Anywhere" on the internet
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main_igw.id
+    gateway_id = aws_internet_gateway.igw.id # Đi thẳng qua cổng chính
   }
-
-  tags = {
-    Name = "Public-Route-Table"
-  }
+  tags = { Name = "Public-RT" }
 }
 
-# 3. Associate the Route Table with Public Subnets
-# (Gắn bảng định tuyến vào các Subnet công cộng)
-
-# AZ 1a
-resource "aws_route_table_association" "public_1a_assoc" {
-  subnet_id      = aws_subnet.public_subnet_1a.id
-  route_table_id = aws_route_table.public_rt.id
-}
-
-# AZ 1b
-resource "aws_route_table_association" "public_1b_assoc" {
-  subnet_id      = aws_subnet.public_subnet_1b.id
-  route_table_id = aws_route_table.public_rt.id
+# --- PRIVATE ROUTE TABLE (Dùng cho Java App/Database) ---
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main_nat.id # Đi qua cổng NAT (Receptionist)
+  }
+  tags = { Name = "Private-RT" }
 }
