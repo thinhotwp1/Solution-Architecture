@@ -34,76 +34,63 @@ resource "aws_vpc" "main_vpc" {
   }
 }
 
-# --- Subnets Allocation ---
+# Day 11: 1. Create Web Security Group (For Load Balancer or Web EC2)
+resource "aws_security_group" "web_sg" {
+  name        = "Aviation-Web-SG"
+  description = "Allow HTTP and HTTPS inbound traffic"
+  vpc_id      = aws_vpc.main_vpc.id # Attach to the VPC we built in Week 2
 
-# AZ 1a
-resource "aws_subnet" "public_subnet_1a" {
-  vpc_id                  = aws_vpc.main_vpc.id # Tham chiếu đúng tên "main_vpc" ở trên
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
-  tags = { Name = "Public-Subnet-1a" }
-}
-
-resource "aws_subnet" "private_subnet_1a" {
-  vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-east-1a"
-  tags = { Name = "Private-Subnet-1a" }
-}
-
-# AZ 1b
-resource "aws_subnet" "public_subnet_1b" {
-  vpc_id                  = aws_vpc.main_vpc.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = "us-east-1b"
-  map_public_ip_on_launch = true
-  tags = { Name = "Public-Subnet-1b" }
-}
-
-resource "aws_subnet" "private_subnet_1b" {
-  vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = "10.0.4.0/24"
-  availability_zone = "us-east-1b"
-  tags = { Name = "Private-Subnet-1b" }
-}
-
-# Day 8:
-# 1. Create the Internet Gateway (Tạo cổng Internet)
-resource "aws_internet_gateway" "main_igw" {
-  vpc_id = aws_vpc.main_vpc.id
-
-  tags = {
-    Name = "Aviation-Main-IGW"
-  }
-}
-
-# 2. Create a Public Route Table (Tạo bảng định tuyến công cộng)
-resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.main_vpc.id
-
-  route {
-    # 0.0.0.0/0 means "Anywhere" on the internet
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main_igw.id
+  # Inbound Rule 1: HTTP
+  ingress {
+    description = "HTTP from Internet"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Anyone can access
   }
 
-  tags = {
-    Name = "Public-Route-Table"
+  # Inbound Rule 2: HTTPS
+  ingress {
+    description = "HTTPS from Internet"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
+
+  # Outbound Rule: Allow everything to leave
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1" # "-1" means ALL protocols
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "Web-Security-Group" }
 }
 
-# 3. Associate the Route Table with Public Subnets
-# (Gắn bảng định tuyến vào các Subnet công cộng)
+# 2. Create Database Security Group (High Security)
+resource "aws_security_group" "db_sg" {
+  name        = "Aviation-DB-SG"
+  description = "Allow PostgreSQL traffic only from Web SG"
+  vpc_id      = aws_vpc.main_vpc.id
 
-# AZ 1a
-resource "aws_route_table_association" "public_1a_assoc" {
-  subnet_id      = aws_subnet.public_subnet_1a.id
-  route_table_id = aws_route_table.public_rt.id
-}
+  # Inbound Rule: Database Port
+  ingress {
+    description     = "Allow traffic from Web Layer"
+    from_port       = 5432 # Change to 3306 if using MySQL
+    to_port         = 5432
+    protocol        = "tcp"
+    # THE MAGIC HAPPENS HERE: Referencing the Web SG instead of IP
+    security_groups = [aws_security_group.web_sg.id]
+  }
 
-# AZ 1b
-resource "aws_route_table_association" "public_1b_assoc" {
-  subnet_id      = aws_subnet.public_subnet_1b.id
-  route_table_id = aws_route_table.public_rt.id
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "DB-Security-Group" }
 }

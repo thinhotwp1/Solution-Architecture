@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5c997663-f482-4b86-99a2-8528ecf475ac" name="Changes" comment="init">
-      <change afterPath="$PROJECT_DIR$/.idea/terraform.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/main.tf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/terraform.tfstate" beforeDir="false" afterPath="$PROJECT_DIR$/terraform.tfstate" afterDir="false" />
     </list>
@@ -19,7 +18,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="Day-6---Virtual-Private-Cloud-(VPC)-Foundations" />
+        <entry key="$PROJECT_DIR$" value="Day-8---Internet-Gateways-(IGW)-&amp;-Route-Tables" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -33,7 +32,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/thinhotwp1/Solution-Architecture.git&quot;,
-    &quot;accountId&quot;: &quot;d9ed672d-4ce6-454f-a5bf-664a8b59caf8&quot;
+    &quot;accountId&quot;: &quot;a4d05653-b1bb-4a39-9d45-e6372f163706&quot;
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
@@ -66,7 +65,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "Day-7---Subnets-(Public-vs-Private)",
+    "git-widget-placeholder": "Day-11---Security-Groups-(Stateful-Firewalls)",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/thinh/github/Solution-Architecture",
@@ -88,7 +87,8 @@
       <option name="presentableId" value="Default" />
       <updated>1776151058933</updated>
       <workItem from="1776151060395" duration="2451000" />
-      <workItem from="1776185587364" duration="1352000" />
+      <workItem from="1776185587364" duration="4897000" />
+      <workItem from="1776354125707" duration="2869000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -122,7 +122,23 @@
       <option name="project" value="LOCAL" />
       <updated>1776162826922</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="init">
+      <option name="closed" value="true" />
+      <created>1776186958332</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1776186958332</updated>
+    </task>
+    <task id="LOCAL-00006" summary="init">
+      <option name="closed" value="true" />
+      <created>1776190847507</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1776190847507</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

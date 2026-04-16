@@ -1,21 +1,20 @@
 version: '3.8'
 
 services:
-  # LocalStack đóng vai trò là AWS giả lập trên máy local
+  # 1. LocalStack: AWS giả lập trên máy local
   localstack:
     container_name: localstack_iam_lab
     image: localstack/localstack:3.0.0
     ports:
       - "4566:4566"            # Port mặc định để gọi các dịch vụ AWS
     environment:
-
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "./localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
-  # Container chạy Terraform
+  # 2. Terraform: Môi trường chạy code HCL
   terraform:
     container_name: terraform_iam_lab
     image: hashicorp/terraform:latest
@@ -31,3 +30,19 @@ services:
     entrypoint: /bin/sh        # Giữ container chạy để chúng ta vào gõ lệnh
     stdin_open: true
     tty: true
+
+  # 3. Rover: Công cụ trực quan hóa kiến trúc Terraform
+  rover:
+    container_name: rover_visualizer
+    image: im2nguyen/rover:latest
+    ports:
+      - "9000:9000"            # Cổng để bạn xem giao diện trên trình duyệt
+    volumes:
+      - .:/src                 # Ánh xạ cùng thư mục code Terraform để Rover đọc
+    environment:
+      # Rover cũng cần môi trường AWS giả lập để đọc plan nếu cần
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      - terraform
