@@ -70,7 +70,7 @@ resource "aws_subnet" "private_subnet_1b" {
 
 # Day 8:
 # 1. Create the Internet Gateway (Tạo cổng Internet)
-resource "aws_internet_gateway" "main_igw" {
+resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main_vpc.id
 
   tags = {
@@ -78,19 +78,45 @@ resource "aws_internet_gateway" "main_igw" {
   }
 }
 
-# 2. Create a private Route Table
+# Day 9: Create an Elastic IP for the NAT Gateway
+resource "aws_eip" "nat_eip" {
+  vpc = true # Note: In newer AWS provider versions, use `domain = "vpc"` instead of `vpc = true`
+
+  # Best Practice: EIP requires the Internet Gateway to exist first
+  depends_on = [aws_internet_gateway.igw]
+
+  tags = { Name = "Aviation-NAT-EIP" }
+}
+# Create the NAT Gateway in the PUBLIC subnet
+resource "aws_nat_gateway" "main_nat" {
+  allocation_id = aws_eip.nat_eip.id
+
+  # IMPORTANT: Place it in Public Subnet A, NOT the private subnet!
+  subnet_id     = aws_subnet.public_subnet_1a.id
+
+  tags = { Name = "Main-NAT-Gateway" }
+
+  depends_on = [aws_internet_gateway.igw]
+}
+
+# --- PUBLIC ROUTE TABLE (Dùng cho Load Balancer) ---
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id # Đi thẳng qua cổng chính
+  }
+  tags = { Name = "Public-RT" }
+}
+
+# --- PRIVATE ROUTE TABLE (Dùng cho Java App/Database) ---
 resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.main_vpc.id
-
   route {
-    # 0.0.0.0/0 means "Anywhere" on the internet
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.nat.id
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main_nat.id # Đi qua cổng NAT (Receptionist)
   }
-
-  tags = {
-    Name = "Private-Route-Table"
-  }
+  tags = { Name = "Private-RT" }
 }
 
 # Day 13:  Tạo VPC thứ 2 cho hệ thống
