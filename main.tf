@@ -34,6 +34,65 @@ resource "aws_vpc" "main_vpc" {
   }
 }
 
+# --- Subnets Allocation ---
+
+# AZ 1a
+resource "aws_subnet" "public_subnet_1a" {
+  vpc_id                  = aws_vpc.main_vpc.id # Tham chiếu đúng tên "main_vpc" ở trên
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags = { Name = "Public-Subnet-1a" }
+}
+
+resource "aws_subnet" "private_subnet_1a" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "us-east-1a"
+  tags = { Name = "Private-Subnet-1a" }
+}
+
+# AZ 1b
+resource "aws_subnet" "public_subnet_1b" {
+  vpc_id                  = aws_vpc.main_vpc.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "us-east-1b"
+  map_public_ip_on_launch = true
+  tags = { Name = "Public-Subnet-1b" }
+}
+
+resource "aws_subnet" "private_subnet_1b" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.4.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Private-Subnet-1b" }
+}
+
+# Day 8:
+# 1. Create the Internet Gateway (Tạo cổng Internet)
+resource "aws_internet_gateway" "main_igw" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  tags = {
+    Name = "Aviation-Main-IGW"
+  }
+}
+
+# 2. Create a private Route Table
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  route {
+    # 0.0.0.0/0 means "Anywhere" on the internet
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.nat.id
+  }
+
+  tags = {
+    Name = "Private-Route-Table"
+  }
+}
+
 # Day 13:  Tạo VPC thứ 2 cho hệ thống
 resource "aws_vpc" "shared_vpc" {
   cidr_block           = "10.1.0.0/16"
@@ -58,7 +117,7 @@ resource "aws_vpc_peering_connection" "core_to_shared" {
 }
 # 1. Chỉ đường cho Core VPC: "Muốn sang mạng 10.1.x.x thì đi qua cầu Peering"
 resource "aws_route" "core_to_shared_route" {
-  route_table_id            = aws_route_table.private_rt_a.id # Trỏ từ Private Route Table A của Core VPC
+  route_table_id            = aws_route_table.private_rt.id # Trỏ từ Private Route Table A của Core VPC
   destination_cidr_block    = aws_vpc.shared_vpc.cidr_block   # Đích đến: 10.1.0.0/16
   vpc_peering_connection_id = aws_vpc_peering_connection.core_to_shared.id
 }
