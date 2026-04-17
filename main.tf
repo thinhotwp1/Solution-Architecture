@@ -34,6 +34,20 @@ resource "aws_vpc" "main_vpc" {
   }
 }
 
+resource "aws_subnet" "private_subnet_1a" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "us-east-1a"
+  tags = { Name = "Private-Subnet-1a" }
+}
+
+resource "aws_subnet" "private_subnet_1b" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.4.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Private-Subnet-1b" }
+}
+
 # Day 11: 1. Create Web Security Group (For Load Balancer or Web EC2)
 resource "aws_security_group" "web_sg" {
   name        = "Aviation-Web-SG"
@@ -95,7 +109,7 @@ resource "aws_security_group" "db_sg" {
   tags = { Name = "DB-Security-Group" }
 }
 
-# 1. Lấy một AMI mặc định giả lập có sẵn trong LocalStack
+# Day 16: 1. Lấy một AMI mặc định giả lập có sẵn trong LocalStack
 data "aws_ami" "amazon_linux_mock" {
   most_recent = true
   owners      = ["amazon"]
