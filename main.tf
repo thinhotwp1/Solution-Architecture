@@ -154,3 +154,41 @@ resource "aws_route" "shared_to_core_route" {
   destination_cidr_block    = aws_vpc.main_vpc.cidr_block   # Đích đến: 10.0.0.0/16
   vpc_peering_connection_id = aws_vpc_peering_connection.core_to_shared.id
 }
+
+# Day 14: 1. Create the VPC Endpoint for S3 (Gateway Type)
+resource "aws_vpc_endpoint" "s3_endpoint" {
+  vpc_id       = aws_vpc.main_vpc.id
+  service_name = "com.amazonaws.us-east-1.s3" # The official AWS service name for S3
+
+  # Specify the type. If omitted, it defaults to Gateway, but it's best to be explicit.
+  vpc_endpoint_type = "Gateway"
+
+  tags = { Name = "Aviation-S3-Endpoint" }
+}
+
+# 2. Attach the Endpoint to your Private Route Table
+# (Gắn Endpoint vào Route Table của vùng Private để chỉ đường)
+resource "aws_vpc_endpoint_route_table_association" "private_s3_route" {
+  route_table_id  = aws_route_table.private_rt.id # The Route table we fixed in the previous step
+  vpc_endpoint_id = aws_vpc_endpoint.s3_endpoint.id
+}
+
+# 3. Optional: Endpoint Policy (Restrict access to specific buckets)
+# (Chính sách bảo mật: Chỉ cho phép truy cập bucket cụ thể)
+# You can add this block inside the aws_vpc_endpoint resource above.
+/*
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "s3:*"
+        Effect    = "Allow"
+        Principal = "*"
+        Resource  = [
+          "arn:aws:s3:::sia-booking-receipts",
+          "arn:aws:s3:::sia-booking-receipts/*"
+        ]
+      }
+    ]
+  })
+*/
