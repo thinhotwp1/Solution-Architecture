@@ -94,3 +94,55 @@ resource "aws_security_group" "db_sg" {
 
   tags = { Name = "DB-Security-Group" }
 }
+
+# 1. Lấy một AMI mặc định giả lập có sẵn trong LocalStack
+data "aws_ami" "amazon_linux_mock" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+# 2. Khởi tạo máy chủ gốc (Golden Source) nằm ở private_subnet_1a
+resource "aws_instance" "sia_java_source" {
+  ami           = data.aws_ami.amazon_linux_mock.id
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.private_subnet_1a.id
+
+  # Gắn Security Group của DB/App mà bạn đã tạo ở Day 11
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
+
+  tags = { Name = "SIA-Java-Master-Source" }
+}
+
+# 3. Tạo AMI (Bản chụp mẫu) từ máy chủ gốc vừa tạo
+resource "aws_ami_from_instance" "sia_java_golden_ami" {
+  name               = "sia-java-golden-image-v1"
+  source_instance_id = aws_instance.sia_java_source.id
+
+  # Đảm bảo máy chủ gốc phải được tạo xong thì mới chụp ảnh
+  depends_on = [aws_instance.sia_java_source]
+
+  tags = { Name = "SIA-Java-Golden-AMI" }
+}
+
+# 4. Triển khai hàng loạt (Deploy Fleet): Tạo 2 máy chủ mới từ Golden AMI
+resource "aws_instance" "sia_java_clones" {
+  count         = 2 # Tham số count giúp tạo N máy chủ giống nhau
+
+  # Sử dụng ID của AMI vừa tự tạo thay vì AMI gốc của Amazon
+  ami           = aws_ami_from_instance.sia_java_golden_ami.id
+  instance_type = "t3.micro"
+
+  # Rải đều 2 máy ra 2 Zone khác nhau để đảm bảo High Availability (HA)
+  # Nếu count.index = 0 -> Zone A, count.index = 1 -> Zone B
+  subnet_id = count.index == 0 ? aws_subnet.private_subnet_1a.id : aws_subnet.private_subnet_1b.id
+
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
+
+  tags = {
+    Name = "SIA-Java-Clone-Node-${count.index + 1}"
+  }
+}
