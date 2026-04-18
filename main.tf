@@ -363,6 +363,53 @@ resource "aws_security_group" "db_sg" {
   tags = { Name = "DB-Security-Group" }
 }
 
+# Day 12: 1. Create a Custom NACL for the Public Subnet
+resource "aws_network_acl" "public_nacl" {
+  vpc_id     = aws_vpc.main_vpc.id
+  subnet_ids = [aws_subnet.public_subnet_1a.id] # Attach to Subnet 1a
+
+  tags = { Name = "Aviation-Public-NACL" }
+}
+
+# --- INBOUND RULES (Luồng đi vào) ---
+
+# Rule 100: Deny Hacker IP (Evaluated FIRST because number is lowest)
+resource "aws_network_acl_rule" "deny_hacker_inbound" {
+  network_acl_id = aws_network_acl.public_nacl.id
+  rule_number    = 100
+  egress         = false # false means Inbound
+  protocol       = "-1"  # All protocols
+  rule_action    = "deny"
+  cidr_block     = "203.0.113.50/32" # Example malicious IP
+}
+
+# Rule 200: Allow HTTP from anywhere
+resource "aws_network_acl_rule" "allow_http_inbound" {
+  network_acl_id = aws_network_acl.public_nacl.id
+  rule_number    = 200
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 80
+  to_port        = 80
+}
+
+# --- OUTBOUND RULES (Luồng đi ra) ---
+
+# Rule 100: Allow HTTP response out via Ephemeral Ports
+# (Cho phép trả kết quả HTTP về qua các cổng tạm thời)
+resource "aws_network_acl_rule" "allow_ephemeral_outbound" {
+  network_acl_id = aws_network_acl.public_nacl.id
+  rule_number    = 100
+  egress         = true # true means Outbound
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 1024
+  to_port        = 65535 # Ephemeral port range
+}
+
 # Day 17: 1. Fetch the latest Amazon Linux 2023 AMI dynamically
 data "aws_ami" "amazon_linux_2023" {
   most_recent = true
