@@ -579,34 +579,34 @@ resource "aws_security_group" "nginx_sg" {
   tags = { Name = "Nginx-Web-SG" }
 }
 
-# 3. Launch the EC2 Instance with User Data
-resource "aws_instance" "public_web_server" {
-  ami           = data.aws_ami.amazon_linux_2023.id
-  instance_type = "t3.micro"
-
-  # Place it in the Public Subnet created on Day 7
-  subnet_id     = aws_subnet.public_subnet_1a.id
-
-  # Attach the Security Group
-  vpc_security_group_ids = [aws_security_group.nginx_sg.id]
-
-  # Assign a Public IP so we can access the Nginx welcome page
-  associate_public_ip_address = true
-
-  # The Bootstrapping Script (Runs as root on first boot)
-  user_data = <<-EOF
-              #!/bin/bash
-              dnf update -y
-              dnf install nginx -y
-              systemctl start nginx
-              systemctl enable nginx
-              echo "<h1>SIA Aviation Public Web Server is Live!</h1>" > /usr/share/nginx/html/index.html
-              EOF
-
-  tags = {
-    Name = "SIA-Public-Nginx-Server"
-  }
-}
+# # 3. Launch the EC2 Instance with User Data
+# resource "aws_instance" "public_web_server" {
+#   ami           = data.aws_ami.amazon_linux_2023.id
+#   instance_type = "t3.micro"
+#
+#   # Place it in the Public Subnet created on Day 7
+#   subnet_id     = aws_subnet.public_subnet_1a.id
+#
+#   # Attach the Security Group
+#   vpc_security_group_ids = [aws_security_group.nginx_sg.id]
+#
+#   # Assign a Public IP so we can access the Nginx welcome page
+#   associate_public_ip_address = true
+#
+#   # The Bootstrapping Script (Runs as root on first boot)
+#   user_data = <<-EOF
+#               #!/bin/bash
+#               dnf update -y
+#               dnf install nginx -y
+#               systemctl start nginx
+#               systemctl enable nginx
+#               echo "<h1>SIA Aviation Public Web Server is Live!</h1>" > /usr/share/nginx/html/index.html
+#               EOF
+#
+#   tags = {
+#     Name = "SIA-Public-Nginx-Server"
+#   }
+# }
 
 # Day 18: 1. Create the IAM Role and Trust Policy (cho phép EC2 đóng giả Role này)
 resource "aws_iam_role" "ec2_s3_readonly_role" {
