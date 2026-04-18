@@ -147,3 +147,52 @@ resource "aws_instance" "public_web_server" {
     Name = "SIA-Public-Nginx-Server"
   }
 }
+
+# Day 19: 1. Bastion Host Security Group (The Outer Shield)
+resource "aws_security_group" "bastion_sg" {
+  name        = "Aviation-Bastion-SG"
+  description = "Allow SSH from Corporate IP only"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  ingress {
+    description = "SSH from Admin PC"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    # BEST PRACTICE: Replace 0.0.0.0/0 with your actual Home/Office IP (e.g., "113.190.x.x/32")
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "Bastion-Security-Group" }
+}
+
+# 2. Deploy the Bastion Host in the Public Subnet
+resource "aws_instance" "bastion_host" {
+  ami           = data.aws_ami.amazon_linux_2023.id
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.public_subnet_1a.id
+
+  vpc_security_group_ids      = [aws_security_group.bastion_sg.id]
+  associate_public_ip_address = true # Requires a public IP to be accessible
+
+  tags = { Name = "SIA-Bastion-Host" }
+}
+
+# 3. CRITICAL UPDATE: Modify the Private App/DB Security Group (From Day 11)
+# We must update the private SG to ONLY allow SSH from the Bastion SG.
+resource "aws_security_group_rule" "allow_ssh_from_bastion" {
+  type                     = "ingress"
+  from_port                = 22
+  to_port                  = 22
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.db_sg.id # Target SG (The Private Server)
+  source_security_group_id = aws_security_group.bastion_sg.id # The specific Bastion SG allowed
+  description              = "Allow SSH strictly from Bastion Host"
+}
