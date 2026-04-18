@@ -150,13 +150,48 @@ resource "aws_internet_gateway" "main_igw" {
 }
 
 
-# --- Day 7: VPC Declaration ---
+# --- Day 6: VPC Declaration ---
 resource "aws_subnet" "public_subnet_1a" {
   vpc_id                  = aws_vpc.main_vpc.id # Tham chiếu đúng tên "main_vpc" ở trên
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = true
   tags = { Name = "Public-Subnet-1a" }
+}
+
+
+# --- Day 7: Subnets Allocation ---
+
+# AZ 1a
+resource "aws_subnet" "public_subnet_1a" {
+  vpc_id                  = aws_vpc.main_vpc.id # Tham chiếu đúng tên "main_vpc" ở trên
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags = { Name = "Public-Subnet-1a" }
+}
+
+resource "aws_subnet" "private_subnet_1a" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "us-east-1a"
+  tags = { Name = "Private-Subnet-1a" }
+}
+
+# AZ 1b
+resource "aws_subnet" "public_subnet_1b" {
+  vpc_id                  = aws_vpc.main_vpc.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "us-east-1b"
+  map_public_ip_on_launch = true
+  tags = { Name = "Public-Subnet-1b" }
+}
+
+resource "aws_subnet" "private_subnet_1b" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.4.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Private-Subnet-1b" }
 }
 
 
