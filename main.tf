@@ -76,36 +76,36 @@ resource "aws_iam_group_policy_attachment" "dev_s3_readonly_attach" {
   policy_arn = aws_iam_policy.s3_readonly_policy.arn
 }
 
-# Day 3: Create the IAM Role with a Trust Policy for EC2
-resource "aws_iam_role" "ec2_s3_readonly_role" {
-  name = "EC2-S3-ReadOnly-Role"
-
-  # The 'assume_role_policy' defines the Trust Relationship (Mối quan hệ tin cậy)
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole" # The action required to request temporary credentials
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com" # We explicitly trust the EC2 service
-        }
-      }
-    ]
-  })
-}
-# Attach the AWS-managed S3 ReadOnly policy to our new Role
-resource "aws_iam_role_policy_attachment" "ec2_s3_readonly_attach" {
-  role       = aws_iam_role.ec2_s3_readonly_role.name
-
-  # The ARN for the standard AWS managed S3 ReadOnly policy
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
-}
-# Create an Instance Profile to wrap the role for EC2 attachment
-resource "aws_iam_instance_profile" "ec2_s3_profile" {
-  name = "EC2-S3-ReadOnly-Profile"
-  role = aws_iam_role.ec2_s3_readonly_role.name
-}
+## Day 3: Create the IAM Role with a Trust Policy for EC2
+# resource "aws_iam_role" "ec2_s3_readonly_role" {
+#   name = "EC2-S3-ReadOnly-Role"
+#
+#   # The 'assume_role_policy' defines the Trust Relationship (Mối quan hệ tin cậy)
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole" # The action required to request temporary credentials
+#         Effect = "Allow"
+#         Principal = {
+#           Service = "ec2.amazonaws.com" # We explicitly trust the EC2 service
+#         }
+#       }
+#     ]
+#   })
+# }
+# # Attach the AWS-managed S3 ReadOnly policy to our new Role
+# resource "aws_iam_role_policy_attachment" "ec2_s3_readonly_attach" {
+#   role       = aws_iam_role.ec2_s3_readonly_role.name
+#
+#   # The ARN for the standard AWS managed S3 ReadOnly policy
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+# }
+# # Create an Instance Profile to wrap the role for EC2 attachment
+# resource "aws_iam_instance_profile" "ec2_s3_profile" {
+#   name = "EC2-S3-ReadOnly-Profile"
+#   role = aws_iam_role.ec2_s3_readonly_role.name
+# }
 
 
 # Day 6: Khởi tạo một VPC với dải IP 10.0.x.x
@@ -119,27 +119,27 @@ resource "aws_vpc" "main_vpc" {
   }
 }
 # Tạo Public Subnet (Dành cho Load Balancer / API Gateway)
-resource "aws_subnet" "public_subnet_1" {
-  vpc_id                  = aws_vpc.main_vpc.id
-  cidr_block              = "10.0.1.0/24" # Cắt ra 256 IPs
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true # Tự động cấp IP Public cho máy ảo gắn vào đây
-
-  tags = {
-    Name = "Public-Subnet-1"
-  }
-}
-
-# Tạo Private Subnet (Dành cho Java Backend / Database)
-resource "aws_subnet" "private_subnet_1" {
-  vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = "10.0.2.0/24" # Cắt ra thêm 256 IPs
-  availability_zone = "us-east-1a"
-
-  tags = {
-    Name = "Private-Subnet-1"
-  }
-}
+# resource "aws_subnet" "public_subnet_1" {
+#   vpc_id                  = aws_vpc.main_vpc.id
+#   cidr_block              = "10.0.1.0/24" # Cắt ra 256 IPs
+#   availability_zone       = "us-east-1a"
+#   map_public_ip_on_launch = true # Tự động cấp IP Public cho máy ảo gắn vào đây
+#
+#   tags = {
+#     Name = "Public-Subnet-1"
+#   }
+# }
+#
+# # Tạo Private Subnet (Dành cho Java Backend / Database)
+# resource "aws_subnet" "private_subnet_1" {
+#   vpc_id            = aws_vpc.main_vpc.id
+#   cidr_block        = "10.0.2.0/24" # Cắt ra thêm 256 IPs
+#   availability_zone = "us-east-1a"
+#
+#   tags = {
+#     Name = "Private-Subnet-1"
+#   }
+# }
 # # Create gateway to take traffic
 # resource "aws_internet_gateway" "main_igw" {
 #   vpc_id = aws_vpc.main_vpc.id
@@ -149,19 +149,7 @@ resource "aws_subnet" "private_subnet_1" {
 #   }
 # }
 
-
-# --- Day 6: VPC Declaration ---
-resource "aws_subnet" "public_subnet_1a" {
-  vpc_id                  = aws_vpc.main_vpc.id # Tham chiếu đúng tên "main_vpc" ở trên
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
-  tags = { Name = "Public-Subnet-1a" }
-}
-
-
 # --- Day 7: Subnets Allocation ---
-
 # AZ 1a
 resource "aws_subnet" "public_subnet_1a" {
   vpc_id                  = aws_vpc.main_vpc.id # Tham chiếu đúng tên "main_vpc" ở trên
@@ -256,14 +244,14 @@ resource "aws_nat_gateway" "main_nat" {
 }
 
 # --- PUBLIC ROUTE TABLE (Dùng cho Load Balancer) ---
-resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.main_vpc.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main_igw.id # Đi thẳng qua cổng chính
-  }
-  tags = { Name = "Public-RT" }
-}
+# resource "aws_route_table" "public_rt" {
+#   vpc_id = aws_vpc.main_vpc.id
+#   route {
+#     cidr_block = "0.0.0.0/0"
+#     gateway_id = aws_internet_gateway.main_igw.id # Đi thẳng qua cổng chính
+#   }
+#   tags = { Name = "Public-RT" }
+# }
 
 # --- PRIVATE ROUTE TABLE (Dùng cho Java App/Database) ---
 resource "aws_route_table" "private_rt" {
@@ -311,30 +299,30 @@ resource "aws_security_group" "web_sg" {
 }
 
 # 2. Create Database Security Group (High Security)
-resource "aws_security_group" "db_sg" {
-  name        = "Aviation-DB-SG"
-  description = "Allow PostgreSQL traffic only from Web SG"
-  vpc_id      = aws_vpc.main_vpc.id
-
-  # Inbound Rule: Database Port
-  ingress {
-    description     = "Allow traffic from Web Layer"
-    from_port       = 5432 # Change to 3306 if using MySQL
-    to_port         = 5432
-    protocol        = "tcp"
-    # THE MAGIC HAPPENS HERE: Referencing the Web SG instead of IP
-    security_groups = [aws_security_group.web_sg.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = { Name = "DB-Security-Group" }
-}
+# resource "aws_security_group" "db_sg" {
+#   name        = "Aviation-DB-SG"
+#   description = "Allow PostgreSQL traffic only from Web SG"
+#   vpc_id      = aws_vpc.main_vpc.id
+#
+#   # Inbound Rule: Database Port
+#   ingress {
+#     description     = "Allow traffic from Web Layer"
+#     from_port       = 5432 # Change to 3306 if using MySQL
+#     to_port         = 5432
+#     protocol        = "tcp"
+#     # THE MAGIC HAPPENS HERE: Referencing the Web SG instead of IP
+#     security_groups = [aws_security_group.web_sg.id]
+#   }
+#
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+#
+#   tags = { Name = "DB-Security-Group" }
+# }
 
 
 # 2. Create Database Security Group (High Security)
