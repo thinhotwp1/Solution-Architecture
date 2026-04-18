@@ -194,6 +194,46 @@ resource "aws_subnet" "private_subnet_1b" {
   tags = { Name = "Private-Subnet-1b" }
 }
 
+# Day 8:
+# 1. Create the Internet Gateway (Tạo cổng Internet)
+resource "aws_internet_gateway" "main_igw" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  tags = {
+    Name = "Aviation-Main-IGW"
+  }
+}
+
+# 2. Create a Public Route Table (Tạo bảng định tuyến công cộng)
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  route {
+    # 0.0.0.0/0 means "Anywhere" on the internet
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main_igw.id
+  }
+
+  tags = {
+    Name = "Public-Route-Table"
+  }
+}
+
+# 3. Associate the Route Table with Public Subnets
+# (Gắn bảng định tuyến vào các Subnet công cộng)
+
+# AZ 1a
+resource "aws_route_table_association" "public_1a_assoc" {
+  subnet_id      = aws_subnet.public_subnet_1a.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# AZ 1b
+resource "aws_route_table_association" "public_1b_assoc" {
+  subnet_id      = aws_subnet.public_subnet_1b.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
 
 # Day 11: 1. Create Web Security Group (For Load Balancer or Web EC2)
 resource "aws_security_group" "web_sg" {
