@@ -76,6 +76,37 @@ resource "aws_iam_group_policy_attachment" "dev_s3_readonly_attach" {
   policy_arn = aws_iam_policy.s3_readonly_policy.arn
 }
 
+# Day 3: Create the IAM Role with a Trust Policy for EC2
+resource "aws_iam_role" "ec2_s3_readonly_role" {
+  name = "EC2-S3-ReadOnly-Role"
+
+  # The 'assume_role_policy' defines the Trust Relationship (Mối quan hệ tin cậy)
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole" # The action required to request temporary credentials
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com" # We explicitly trust the EC2 service
+        }
+      }
+    ]
+  })
+}
+# Attach the AWS-managed S3 ReadOnly policy to our new Role
+resource "aws_iam_role_policy_attachment" "ec2_s3_readonly_attach" {
+  role       = aws_iam_role.ec2_s3_readonly_role.name
+
+  # The ARN for the standard AWS managed S3 ReadOnly policy
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+# Create an Instance Profile to wrap the role for EC2 attachment
+resource "aws_iam_instance_profile" "ec2_s3_profile" {
+  name = "EC2-S3-ReadOnly-Profile"
+  role = aws_iam_role.ec2_s3_readonly_role.name
+}
+
 
 
 # --- Day 7: VPC Declaration ---
