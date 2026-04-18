@@ -140,14 +140,14 @@ resource "aws_subnet" "private_subnet_1" {
     Name = "Private-Subnet-1"
   }
 }
-# Create gateway to take traffic
-resource "aws_internet_gateway" "main_igw" {
-  vpc_id = aws_vpc.main_vpc.id
-
-  tags = {
-    Name = "Main-Internet-Gateway"
-  }
-}
+# # Create gateway to take traffic
+# resource "aws_internet_gateway" "main_igw" {
+#   vpc_id = aws_vpc.main_vpc.id
+#
+#   tags = {
+#     Name = "Main-Internet-Gateway"
+#   }
+# }
 
 
 # --- Day 6: VPC Declaration ---
@@ -234,6 +234,46 @@ resource "aws_route_table_association" "public_1b_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+# Day 9: Create an Elastic IP for the NAT Gateway
+resource "aws_eip" "nat_eip" {
+  vpc = true # Note: In newer AWS provider versions, use `domain = "vpc"` instead of `vpc = true`
+
+  # Best Practice: EIP requires the Internet Gateway to exist first
+  depends_on = [aws_internet_gateway.main_igw]
+
+  tags = { Name = "Aviation-NAT-EIP" }
+}
+# Create the NAT Gateway in the PUBLIC subnet
+resource "aws_nat_gateway" "main_nat" {
+  allocation_id = aws_eip.nat_eip.id
+
+  # IMPORTANT: Place it in Public Subnet A, NOT the private subnet!
+  subnet_id     = aws_subnet.public_subnet_1a.id
+
+  tags = { Name = "Main-NAT-Gateway" }
+
+  depends_on = [aws_internet_gateway.main_igw]
+}
+
+# --- PUBLIC ROUTE TABLE (Dùng cho Load Balancer) ---
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main_igw.id # Đi thẳng qua cổng chính
+  }
+  tags = { Name = "Public-RT" }
+}
+
+# --- PRIVATE ROUTE TABLE (Dùng cho Java App/Database) ---
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main_nat.id # Đi qua cổng NAT (Receptionist)
+  }
+  tags = { Name = "Private-RT" }
+}
 
 # Day 11: 1. Create Web Security Group (For Load Balancer or Web EC2)
 resource "aws_security_group" "web_sg" {
