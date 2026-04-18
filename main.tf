@@ -108,8 +108,7 @@ resource "aws_iam_instance_profile" "ec2_s3_profile" {
 }
 
 
-
-# --- Day 7: VPC Declaration ---
+# Day 6: Khởi tạo một VPC với dải IP 10.0.x.x
 resource "aws_vpc" "main_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -119,7 +118,39 @@ resource "aws_vpc" "main_vpc" {
     Name = "Aviation-Core-VPC"
   }
 }
+# Tạo Public Subnet (Dành cho Load Balancer / API Gateway)
+resource "aws_subnet" "public_subnet_1" {
+  vpc_id                  = aws_vpc.main_vpc.id
+  cidr_block              = "10.0.1.0/24" # Cắt ra 256 IPs
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true # Tự động cấp IP Public cho máy ảo gắn vào đây
 
+  tags = {
+    Name = "Public-Subnet-1"
+  }
+}
+
+# Tạo Private Subnet (Dành cho Java Backend / Database)
+resource "aws_subnet" "private_subnet_1" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.2.0/24" # Cắt ra thêm 256 IPs
+  availability_zone = "us-east-1a"
+
+  tags = {
+    Name = "Private-Subnet-1"
+  }
+}
+# Create gateway to take traffic
+resource "aws_internet_gateway" "main_igw" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  tags = {
+    Name = "Main-Internet-Gateway"
+  }
+}
+
+
+# --- Day 7: VPC Declaration ---
 resource "aws_subnet" "public_subnet_1a" {
   vpc_id                  = aws_vpc.main_vpc.id # Tham chiếu đúng tên "main_vpc" ở trên
   cidr_block              = "10.0.1.0/24"
