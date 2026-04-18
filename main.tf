@@ -34,6 +34,13 @@ resource "aws_vpc" "main_vpc" {
   }
 }
 
+resource "aws_subnet" "public_subnet_1a" {
+  vpc_id                  = aws_vpc.main_vpc.id # Tham chiếu đúng tên "main_vpc" ở trên
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags = { Name = "Public-Subnet-1a" }
+}
 
 # Day 17: 1. Fetch the latest Amazon Linux 2023 AMI dynamically
 data "aws_ami" "amazon_linux_2023" {
