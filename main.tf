@@ -85,7 +85,38 @@ resource "aws_security_group" "nginx_sg" {
   tags = { Name = "Nginx-Web-SG" }
 }
 
-# 3. Launch the EC2 Instance with User Data
+# Day 18: 1. Create the IAM Role and Trust Policy (cho phép EC2 đóng giả Role này)
+resource "aws_iam_role" "ec2_s3_readonly_role" {
+  name = "Aviation-EC2-S3-ReadOnly-Role"
+
+  # Trust Policy: Chỉ định ai được phép 'assume' (đảm nhận) role này
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# 2. Attach the AWS-managed ReadOnly policy to the Role (gắn quyền vào Role)
+resource "aws_iam_role_policy_attachment" "s3_readonly_attach" {
+  role       = aws_iam_role.ec2_s3_readonly_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
+# 3. Create the Instance Profile (Vỏ bọc để truyền Role vào EC2)
+resource "aws_iam_instance_profile" "ec2_s3_profile" {
+  name = "Aviation-EC2-S3-Profile"
+  role = aws_iam_role.ec2_s3_readonly_role.name
+}
+
+# 3. Launch the EC2 Instance with User Data & assign Instance Profile
 resource "aws_instance" "public_web_server" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = "t3.micro"
@@ -98,6 +129,9 @@ resource "aws_instance" "public_web_server" {
 
   # Assign a Public IP so we can access the Nginx welcome page
   associate_public_ip_address = true
+
+  # Assign Instance Profile
+  iam_instance_profile = aws_iam_instance_profile.ec2_s3_profile.name # DÒNG MỚI NÀY
 
   # The Bootstrapping Script (Runs as root on first boot)
   user_data = <<-EOF
