@@ -23,6 +23,31 @@ provider "aws" {
   }
 }
 
+# Day 1: Tạo IAM Group "Developers" (Nhóm lập trình viên)
+resource "aws_iam_group" "developers" {
+  name = "Developers"
+}
+
+# Day 1: Tạo 2 IAM Users (Người dùng)
+resource "aws_iam_user" "senior_dev" {
+  name = "Thinh-Senior"
+}
+
+resource "aws_iam_user" "junior_dev" {
+  name = "Junior-Dev"
+}
+
+# Day 1: Thiết lập Membership (Thành viên) để gán 2 user vào group
+resource "aws_iam_group_membership" "dev_team" {
+  name = "dev-membership"
+  users = [
+    aws_iam_user.senior_dev.name,
+    aws_iam_user.junior_dev.name,
+  ]
+  group = aws_iam_group.developers.name
+}
+
+
 # --- Day 7: VPC Declaration ---
 resource "aws_vpc" "main_vpc" {
   cidr_block           = "10.0.0.0/16"
