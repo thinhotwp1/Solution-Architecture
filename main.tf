@@ -336,6 +336,33 @@ resource "aws_security_group" "db_sg" {
   tags = { Name = "DB-Security-Group" }
 }
 
+
+# 2. Create Database Security Group (High Security)
+resource "aws_security_group" "db_sg" {
+  name        = "Aviation-DB-SG"
+  description = "Allow PostgreSQL traffic only from Web SG"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  # Inbound Rule: Database Port
+  ingress {
+    description     = "Allow traffic from Web Layer"
+    from_port       = 5432 # Change to 3306 if using MySQL
+    to_port         = 5432
+    protocol        = "tcp"
+    # THE MAGIC HAPPENS HERE: Referencing the Web SG instead of IP
+    security_groups = [aws_security_group.web_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "DB-Security-Group" }
+}
+
 # Day 17: 1. Fetch the latest Amazon Linux 2023 AMI dynamically
 data "aws_ami" "amazon_linux_2023" {
   most_recent = true
