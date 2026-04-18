@@ -36,7 +36,7 @@ resource "aws_iam_user" "junior_dev" {
   name = "Junior-Dev"
 }
 
-# Day 2: Setup Membership and assign 2 member into group
+# Setup Membership and assign 2 member into group
 resource "aws_iam_group_membership" "dev_team" {
   name = "dev-membership"
   users = [
