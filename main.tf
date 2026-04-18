@@ -22,38 +22,62 @@ provider "aws" {
     sts = "http://localstack:4566"
     ec2 = "http://localstack:4566"
     s3  = "http://localstack:4566"
+    kms = "http://localstack:4566"
   }
 }
 
-# Day 21: 1. Create the S3 Bucket
-# LƯU Ý: Bạn PHẢI đổi tên bucket này thành một chuỗi ngẫu nhiên của riêng bạn - vì tên bucket là duy nhất toàn cầu.
-resource "aws_s3_bucket" "sia_documents_bucket" {
-  bucket = "sia-aviation-docs-2026-only-one"
+# Day 22: 1. Create a Customer Managed Key (KMS Key)
+resource "aws_kms_key" "sia_s3_key" {
+  description             = "KMS key to encrypt SIA passenger documents"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true # Tự động luân chuyển khóa mỗi năm (Best Practice)
 
-  tags = {
-    Name        = "SIA-Passenger-Documents"
-    Environment = "Production"
-  }
+  tags = { Name = "SIA-KMS-S3-Key" }
 }
 
-# 2. Bật tính năng Versioning (Lưu nhiều phiên bản của file - Tùy chọn nhưng Rất nên dùng)
-resource "aws_s3_bucket_versioning" "sia_docs_versioning" {
-  bucket = aws_s3_bucket.sia_documents_bucket.id
+# Tạo một Alias (Tên gợi nhớ) cho KMS Key để dễ sử dụng
+resource "aws_kms_alias" "sia_s3_key_alias" {
+  name          = "alias/sia-passenger-docs-key"
+  target_key_id = aws_kms_key.sia_s3_key.key_id
+}
+
+# 2. Create the Secure S3 Bucket
+resource "aws_s3_bucket" "sia_secure_docs" {
+  bucket = "sia-secure-passenger-data-ldt-2026"
+  tags   = { Name = "SIA-Secure-Docs" }
+}
+
+# 3. Enable Versioning
+resource "aws_s3_bucket_versioning" "sia_secure_versioning" {
+  bucket = aws_s3_bucket.sia_secure_docs.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
-# 3. Upload a sample object (Tạo một file mẫu trực tiếp từ Terraform)
-resource "aws_s3_object" "sample_receipt" {
-  bucket = aws_s3_bucket.sia_documents_bucket.id
+# 4. Enforce Server-Side Encryption with our KMS Key
+resource "aws_s3_bucket_server_side_encryption_configuration" "sia_secure_encryption" {
+  bucket = aws_s3_bucket.sia_secure_docs.id
 
-  # Key chính là đường dẫn ẢO của file trong bucket
-  key    = "receipts/2026/04/sample-booking-001.txt"
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.sia_s3_key.arn
+      sse_algorithm     = "aws:kms"
+    }
+    # Ép buộc mã hóa ngay cả khi user quên gửi header mã hóa lúc upload
+    bucket_key_enabled = true
+  }
+}
 
-  # Nội dung file
-  content = "PASSENGER: NGUYEN VAN A | FLIGHT: SQ191 | STATUS: CONFIRMED"
+# 5. Configure CORS (Allow a React frontend on a specific domain to upload)
+resource "aws_s3_bucket_cors_configuration" "sia_secure_cors" {
+  bucket = aws_s3_bucket.sia_secure_docs.id
 
-  # Chỉ định hạng lưu trữ (Mặc định là STANDARD nếu không ghi)
-  storage_class = "STANDARD"
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST", "GET"]
+    allowed_origins = ["https://www.singaporeair.com", "http://localhost:3000"] # Chặn mọi domain khác
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
 }
