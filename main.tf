@@ -27,7 +27,7 @@ resource "aws_iam_group" "developers" {
   name = "Developers"
 }
 
-# Day 1: Tạo 2 IAM Users (Người dùng)
+# Tạo 2 IAM Users (Người dùng)
 resource "aws_iam_user" "senior_dev" {
   name = "Thinh-Senior"
 }
