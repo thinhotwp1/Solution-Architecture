@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="5c997663-f482-4b86-99a2-8528ecf475ac" name="Changes" comment="init">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/img.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/main.tf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/terraform.tfstate" beforeDir="false" afterPath="$PROJECT_DIR$/terraform.tfstate" afterDir="false" />
     </list>
@@ -19,7 +17,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="Day-21---S3-Basics-(Buckets,-Objects,-and-Storage-Classes)" />
+        <entry key="$PROJECT_DIR$" value="Day-22---S3-Advance-(Versioning,-Encryption,-CORS)" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -67,7 +65,7 @@
     "Terraform.Init Solution-Architecture.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "Day-22---S3-Advance-(Versioning,-Encryption,-CORS)",
+    "git-widget-placeholder": "Day-23---Hybrid-Storage-&&-Automated-Archiving",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/thinh/github/Solution-Architecture",
@@ -127,6 +125,7 @@
       <workItem from="1776185587364" duration="4897000" />
       <workItem from="1776354125707" duration="2869000" />
       <workItem from="1776497127335" duration="806000" />
+      <workItem from="1776620344658" duration="1558000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -272,7 +271,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776535978643</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="init">
+      <option name="closed" value="true" />
+      <created>1776542621112</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1776542621112</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
