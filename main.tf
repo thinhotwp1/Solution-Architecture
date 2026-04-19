@@ -26,6 +26,41 @@ provider "aws" {
   }
 }
 
+# Day 11: 1. Create Web Security Group (For Load Balancer or Web EC2)
+resource "aws_security_group" "web_sg" {
+  name        = "Aviation-Web-SG"
+  description = "Allow HTTP and HTTPS inbound traffic"
+  vpc_id      = aws_vpc.main_vpc.id # Attach to the VPC we built in Week 2
+
+  # Inbound Rule 1: HTTP
+  ingress {
+    description = "HTTP from Internet"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Anyone can access
+  }
+
+  # Inbound Rule 2: HTTPS
+  ingress {
+    description = "HTTPS from Internet"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Outbound Rule: Allow everything to leave
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1" # "-1" means ALL protocols
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "Web-Security-Group" }
+}
+
 # 2. Create Database Security Group (High Security)
 resource "aws_security_group" "db_sg" {
   name        = "Aviation-DB-SG"
