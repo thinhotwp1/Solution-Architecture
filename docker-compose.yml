@@ -1,15 +1,21 @@
 version: '3.8'
 
 services:
-  # 1. LocalStack: AWS giả lập trên máy local
+  # 1. LocalStack Pro: AWS giả lập với đầy đủ tính năng EC2, EFS thực thi
   localstack:
-    container_name: localstack_iam_lab
-    image: localstack/localstack:3.0.0
+    container_name: localstack_pro_lab
+    # Sửa image sang bản Pro
+    image: localstack/localstack-pro:latest
     ports:
-      - "4566:4566"            # Port mặc định để gọi các dịch vụ AWS
+      - "4566:4566"
+      - "4510-4559:4510-4559"  # Port range cho các dịch vụ Pro (như EC2/EFS)
     environment:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
+      # DÁN TOKEN CỦA BẠN VÀO ĐÂY
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
+      # Bật tính năng EC2 thực thi bằng Docker
+      - EC2_VM_MANAGER=docker
     volumes:
       - "./localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
