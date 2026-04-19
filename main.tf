@@ -26,32 +26,40 @@ provider "aws" {
   }
 }
 
-# Day 23: 1. Create the  S3 Bucket
-resource "aws_s3_bucket" "sia_documents_bucket" {
-  bucket = "sia-secure-passenger-data-ldt-2026"
-  tags   = { Name = "SIA-Secure-Docs" }
+# 1. Create the EFS File System
+resource "aws_efs_file_system" "sia_shared_storage" {
+  creation_token   = "sia-legacy-shared-data"
+  encrypted        = true # Luôn mã hóa dữ liệu at rest
+  performance_mode = "generalPurpose"
+
+  tags = { Name = "SIA-Shared-EFS" }
 }
 
-resource "aws_s3_bucket_lifecycle_configuration" "sia_archive_policy" {
-  bucket = aws_s3_bucket.sia_documents_bucket.id
+# 2. Security Group for EFS (Allow NFS traffic from EC2)
+resource "aws_security_group" "efs_sg" {
+  name        = "Aviation-EFS-SG"
+  description = "Allow NFS traffic from Backend EC2 instances"
+  vpc_id      = aws_vpc.main_vpc.id # Sử dụng VPC bạn đã tạo ở Month 1
 
-  # Rule 1: Chuyển dữ liệu cũ sang Glacier
-  rule {
-    id     = "Archive-To-Glacier-After-30-Days"
-    status = "Enabled"
-
-    # Lọc: Áp dụng rule này cho toàn bộ bucket (bạn có thể thêm filter_prefix nếu chỉ muốn áp dụng cho 1 thư mục cụ thể)
-    filter {}
-
-    # Hành động: Chuyển đổi hạng lưu trữ
-    transition {
-      days          = 30
-      storage_class = "GLACIER"
-    }
-
-    # Thực hành tốt (Best Practice): Dọn dẹp luôn các bản upload bị lỗi/treo
-    abort_incomplete_multipart_upload {
-      days_after_initiation = 7
-    }
+  ingress {
+    description     = "NFS from EC2"
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.db_sg.id] # Chỉ cho phép EC2 thuộc SG này truy cập
   }
+}
+
+# 3. Create a Mount Target in Private Subnet 1A
+resource "aws_efs_mount_target" "efs_mt_1a" {
+  file_system_id  = aws_efs_file_system.sia_shared_storage.id
+  subnet_id       = aws_subnet.private_subnet_1a.id
+  security_groups = [aws_security_group.efs_sg.id]
+}
+
+# 4. Create a Mount Target in Private Subnet 1B (For High Availability)
+resource "aws_efs_mount_target" "efs_mt_1b" {
+  file_system_id  = aws_efs_file_system.sia_shared_storage.id
+  subnet_id       = aws_subnet.private_subnet_1b.id
+  security_groups = [aws_security_group.efs_sg.id]
 }
