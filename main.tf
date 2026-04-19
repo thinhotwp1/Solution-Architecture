@@ -26,7 +26,34 @@ provider "aws" {
   }
 }
 
-# Day 11: 1. Create Web Security Group (For Load Balancer or Web EC2)
+# Day 6: Khởi tạo một VPC với dải IP 10.0.x.x
+resource "aws_vpc" "main_vpc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "Aviation-Core-VPC"
+  }
+}
+
+# AZ 1a
+resource "aws_subnet" "private_subnet_1a" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "us-east-1a"
+  tags = { Name = "Private-Subnet-1a" }
+}
+
+# AZ 1b
+resource "aws_subnet" "private_subnet_1b" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.4.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Private-Subnet-1b" }
+}
+
+# 1. Create Web Security Group (For Load Balancer or Web EC2)
 resource "aws_security_group" "web_sg" {
   name        = "Aviation-Web-SG"
   description = "Allow HTTP and HTTPS inbound traffic"
