@@ -26,6 +26,7 @@ provider "aws" {
     efs         = "http://localstack:4566"
     rds         = "http://localstack:4566"
     elasticache = "http://localstack:4566"
+    dynamodb    = "http://localstack:4566"
   }
 }
 
@@ -170,4 +171,36 @@ resource "aws_elasticache_cluster" "sia_flight_cache" {
 
   # Sử dụng chung DB Security Group (nhớ mở thêm port 6379 trong db_sg)
   security_group_ids = [aws_security_group.db_sg.id]
+}
+
+# Day 31: Tạo bảng DynamoDB cho Nhật ký Trạng thái Chuyến bay
+resource "aws_dynamodb_table" "sia_flight_status_logs" {
+  name = "SIA-Flight-Status-Logs"
+
+  # Chế độ On-Demand (Không cần đoán trước dung lượng)
+  billing_mode = "PAY_PER_REQUEST"
+
+  # Khai báo khóa chính phức hợp
+  hash_key  = "FlightNumber" # Partition Key
+  range_key = "UpdateTime"   # Sort Key
+
+  # Định nghĩa kiểu dữ liệu cho các khóa (BẮT BUỘC)
+  # S = String, N = Number
+  attribute {
+    name = "FlightNumber"
+    type = "S"
+  }
+
+  attribute {
+    name = "UpdateTime"
+    type = "N" # Lưu Timestamp dưới dạng số (ví dụ: Epoch time)
+  }
+
+  # Lưu ý: Bạn KHÔNG CẦN khai báo các attribute khác (như Gate, Status, DelayMinutes...)
+  # vì DynamoDB là NoSQL. Bạn có thể tự do chèn các trường đó vào từ code Java sau này.
+
+  tags = {
+    Name        = "SIA Flight Status Tracking"
+    Environment = "Dev"
+  }
 }
