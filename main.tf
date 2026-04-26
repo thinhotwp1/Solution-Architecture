@@ -18,11 +18,12 @@ provider "aws" {
   s3_use_path_style           = true
 
   endpoints {
-    iam = "http://localstack:4566"
-    sts = "http://localstack:4566"
-    ec2 = "http://localstack:4566"
-    s3  = "http://localstack:4566"
-    kms = "http://localstack:4566"
+    iam         = "http://localstack:4566"
+    sts         = "http://localstack:4566"
+    ec2         = "http://localstack:4566"
+    s3          = "http://localstack:4566"
+    kms         = "http://localstack:4566"
+    efs         = "http://localstack:4566"
   }
 }
 
@@ -42,7 +43,7 @@ resource "aws_subnet" "private_subnet_1a" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.3.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "Private-Subnet-1a" }
+  tags              = { Name = "Private-Subnet-1a" }
 }
 
 # AZ 1b
@@ -50,7 +51,7 @@ resource "aws_subnet" "private_subnet_1b" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.4.0/24"
   availability_zone = "us-east-1b"
-  tags = { Name = "Private-Subnet-1b" }
+  tags              = { Name = "Private-Subnet-1b" }
 }
 
 # 1. Create Web Security Group (For Load Balancer or Web EC2)
@@ -96,10 +97,10 @@ resource "aws_security_group" "db_sg" {
 
   # Inbound Rule: Database Port
   ingress {
-    description     = "Allow traffic from Web Layer"
-    from_port       = 5432 # Change to 3306 if using MySQL
-    to_port         = 5432
-    protocol        = "tcp"
+    description = "Allow traffic from Web Layer"
+    from_port   = 5432 # Change to 3306 if using MySQL
+    to_port     = 5432
+    protocol    = "tcp"
     # THE MAGIC HAPPENS HERE: Referencing the Web SG instead of IP
     security_groups = [aws_security_group.web_sg.id]
   }
