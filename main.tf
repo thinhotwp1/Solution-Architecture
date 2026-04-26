@@ -53,7 +53,7 @@ resource "aws_subnet" "private_subnet_1b" {
   tags = { Name = "Private-Subnet-1b" }
 }
 
-# 1. Create Web Security Group (For Load Balancer or Web EC2)
+# Create Web Security Group (For Load Balancer or Web EC2)
 resource "aws_security_group" "web_sg" {
   name        = "Aviation-Web-SG"
   description = "Allow HTTP and HTTPS inbound traffic"
@@ -88,7 +88,7 @@ resource "aws_security_group" "web_sg" {
   tags = { Name = "Web-Security-Group" }
 }
 
-# 2. Create Database Security Group (High Security)
+# Create Database Security Group (High Security)
 resource "aws_security_group" "db_sg" {
   name        = "Aviation-DB-SG"
   description = "Allow PostgreSQL traffic only from Web SG"
@@ -114,40 +114,57 @@ resource "aws_security_group" "db_sg" {
   tags = { Name = "DB-Security-Group" }
 }
 
-# Day 24: 1. Create the EFS File System
-resource "aws_efs_file_system" "sia_shared_storage" {
-  creation_token   = "sia-legacy-shared-data"
-  encrypted        = true # Luôn mã hóa dữ liệu at rest
-  performance_mode = "generalPurpose"
+# ==========================================
+# Day 30 - WEEK 2 REVIEW: UNIFIED DATA TIER
+# ==========================================
 
-  tags = { Name = "SIA-Shared-EFS" }
+# 1. Unified Subnet Group for both DB and Cache
+# (Tái sử dụng các Private Subnet đã tạo ở Week 1)
+resource "aws_db_subnet_group" "sia_data_tier_subnets" {
+  name       = "sia-data-tier-subnet-group"
+  subnet_ids = [aws_subnet.private_subnet_1a.id, aws_subnet.private_subnet_1b.id]
+  tags       = { Name = "SIA-Data-Tier-Subnets" }
 }
 
-# 2. Security Group for EFS (Allow NFS traffic from EC2)
-resource "aws_security_group" "efs_sg" {
-  name        = "Aviation-EFS-SG"
-  description = "Allow NFS traffic from Backend EC2 instances"
-  vpc_id      = aws_vpc.main_vpc.id # Sử dụng VPC bạn đã tạo ở Month 1
-
-  ingress {
-    description     = "NFS from EC2"
-    from_port       = 2049
-    to_port         = 2049
-    protocol        = "tcp"
-    security_groups = [aws_security_group.db_sg.id] # Chỉ cho phép EC2 thuộc SG này truy cập
-  }
+resource "aws_elasticache_subnet_group" "sia_cache_subnets" {
+  name       = "sia-cache-subnet-group"
+  subnet_ids = [aws_subnet.private_subnet_1a.id, aws_subnet.private_subnet_1b.id]
 }
 
-# 3. Create a Mount Target in Private Subnet 1A
-resource "aws_efs_mount_target" "efs_mt_1a" {
-  file_system_id  = aws_efs_file_system.sia_shared_storage.id
-  subnet_id       = aws_subnet.private_subnet_1a.id
-  security_groups = [aws_security_group.efs_sg.id]
+# 2. The Persistent Layer: PostgreSQL RDS
+resource "aws_db_instance" "sia_primary_db" {
+  identifier             = "sia-core-booking-db"
+  engine                 = "postgres"
+  engine_version         = "15.3"
+  instance_class         = "db.t3.micro"
+  allocated_storage      = 20
+
+  db_name                = "siabooking"
+  username               = "sia_admin"
+  password               = "SuperSecretDev2026!"
+
+  db_subnet_group_name   = aws_db_subnet_group.sia_data_tier_subnets.name
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
+
+  multi_az               = false # Giữ false cho LocalStack/Dev để tiết kiệm tài nguyên
+  publicly_accessible    = false
+  skip_final_snapshot    = true
+
+  tags = { Name = "SIA-Persistent-RDS" }
 }
 
-# 4. Create a Mount Target in Private Subnet 1B (For High Availability)
-resource "aws_efs_mount_target" "efs_mt_1b" {
-  file_system_id  = aws_efs_file_system.sia_shared_storage.id
-  subnet_id       = aws_subnet.private_subnet_1b.id
-  security_groups = [aws_security_group.efs_sg.id]
+# 3. The High-Speed Layer: ElastiCache Redis
+resource "aws_elasticache_cluster" "sia_flight_cache" {
+  cluster_id           = "sia-flight-schedule-cache"
+  engine               = "redis"
+  engine_version       = "7.0"
+  node_type            = "cache.t3.micro"
+  num_cache_nodes      = 1
+  port                 = 6379
+
+  parameter_group_name = "default.redis7"
+  subnet_group_name    = aws_elasticache_subnet_group.sia_cache_subnets.name
+
+  # Sử dụng chung DB Security Group (nhớ mở thêm port 6379 trong db_sg)
+  security_group_ids   = [aws_security_group.db_sg.id]
 }
