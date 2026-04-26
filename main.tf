@@ -18,11 +18,14 @@ provider "aws" {
   s3_use_path_style           = true
 
   endpoints {
-    iam = "http://localstack:4566"
-    sts = "http://localstack:4566"
-    ec2 = "http://localstack:4566"
-    s3  = "http://localstack:4566"
-    kms = "http://localstack:4566"
+    iam         = "http://localstack:4566"
+    sts         = "http://localstack:4566"
+    ec2         = "http://localstack:4566"
+    s3          = "http://localstack:4566"
+    kms         = "http://localstack:4566"
+    efs         = "http://localstack:4566"
+    rds         = "http://localstack:4566"
+    elasticache = "http://localstack:4566"
   }
 }
 
@@ -42,7 +45,7 @@ resource "aws_subnet" "private_subnet_1a" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.3.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "Private-Subnet-1a" }
+  tags              = { Name = "Private-Subnet-1a" }
 }
 
 # AZ 1b
@@ -50,7 +53,7 @@ resource "aws_subnet" "private_subnet_1b" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.4.0/24"
   availability_zone = "us-east-1b"
-  tags = { Name = "Private-Subnet-1b" }
+  tags              = { Name = "Private-Subnet-1b" }
 }
 
 # Create Web Security Group (For Load Balancer or Web EC2)
@@ -96,10 +99,10 @@ resource "aws_security_group" "db_sg" {
 
   # Inbound Rule: Database Port
   ingress {
-    description     = "Allow traffic from Web Layer"
-    from_port       = 5432 # Change to 3306 if using MySQL
-    to_port         = 5432
-    protocol        = "tcp"
+    description = "Allow traffic from Web Layer"
+    from_port   = 5432 # Change to 3306 if using MySQL
+    to_port     = 5432
+    protocol    = "tcp"
     # THE MAGIC HAPPENS HERE: Referencing the Web SG instead of IP
     security_groups = [aws_security_group.web_sg.id]
   }
@@ -133,38 +136,38 @@ resource "aws_elasticache_subnet_group" "sia_cache_subnets" {
 
 # 2. The Persistent Layer: PostgreSQL RDS
 resource "aws_db_instance" "sia_primary_db" {
-  identifier             = "sia-core-booking-db"
-  engine                 = "postgres"
-  engine_version         = "15.3"
-  instance_class         = "db.t3.micro"
-  allocated_storage      = 20
+  identifier        = "sia-core-booking-db"
+  engine            = "postgres"
+  engine_version    = "15.3"
+  instance_class    = "db.t3.micro"
+  allocated_storage = 20
 
-  db_name                = "siabooking"
-  username               = "sia_admin"
-  password               = "SuperSecretDev2026!"
+  db_name  = "siabooking"
+  username = "sia_admin"
+  password = "SuperSecretDev2026!"
 
   db_subnet_group_name   = aws_db_subnet_group.sia_data_tier_subnets.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
 
-  multi_az               = false # Giữ false cho LocalStack/Dev để tiết kiệm tài nguyên
-  publicly_accessible    = false
-  skip_final_snapshot    = true
+  multi_az            = false # Giữ false cho LocalStack/Dev để tiết kiệm tài nguyên
+  publicly_accessible = false
+  skip_final_snapshot = true
 
   tags = { Name = "SIA-Persistent-RDS" }
 }
 
 # 3. The High-Speed Layer: ElastiCache Redis
 resource "aws_elasticache_cluster" "sia_flight_cache" {
-  cluster_id           = "sia-flight-schedule-cache"
-  engine               = "redis"
-  engine_version       = "7.0"
-  node_type            = "cache.t3.micro"
-  num_cache_nodes      = 1
-  port                 = 6379
+  cluster_id      = "sia-flight-schedule-cache"
+  engine          = "redis"
+  engine_version  = "7.0"
+  node_type       = "cache.t3.micro"
+  num_cache_nodes = 1
+  port            = 6379
 
   parameter_group_name = "default.redis7"
   subnet_group_name    = aws_elasticache_subnet_group.sia_cache_subnets.name
 
   # Sử dụng chung DB Security Group (nhớ mở thêm port 6379 trong db_sg)
-  security_group_ids   = [aws_security_group.db_sg.id]
+  security_group_ids = [aws_security_group.db_sg.id]
 }
